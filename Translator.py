@@ -46,6 +46,13 @@ class Minus(Numeric):
     def eval(self, env):
         return -1 * float(self.right.eval(env))
     
+class Boolean(Logic):
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self, env):
+        return self.value
+    
 class Not(Logic):
     def __init__(self, right):
         self.right = right

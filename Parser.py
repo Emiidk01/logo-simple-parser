@@ -1,4 +1,5 @@
 from Lexer import *
+from Translator import * 
 
 class Parser:
 	lex = None
@@ -64,17 +65,32 @@ class Parser:
 	def primaryExpression(self):
 		if self.token.tag in self.firstPrimaryExpression:
 			if self.token.tag == Tag.ID:
+				name = self.token.value
+				line = self.lex.line
 				self.check(Tag.ID)
+				return Identifier(name, line)
+			
 			elif self.token.tag == Tag.NUMBER:
+				number = self.token.value
+				line = self.lex.line
 				self.check(Tag.NUMBER)
+				return Number(number)
+
 			elif self.token.tag == Tag.TRUE:
+				line = self.lex.line
 				self.check(Tag.TRUE)
+				return Boolean(True)
+
 			elif self.token.tag == Tag.FALSE:
+				line = self.lex.line
 				self.check(Tag.FALSE)
+				return Boolean(False) 	
+
 			elif self.token.tag == ord('('):
 				self.check(ord('('))
-				self.expression()
+				node = self.expression()
 				self.check(ord(')'))
+				return node
 		else:
 			self.error("expected a primary expression before " + str(self.token)) 
 
