@@ -56,3 +56,46 @@ class Add(Numeric):
         right = float(self.right.eval(env))
         return left + right
     
+class Subtract(Numeric):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval (self, env):
+        left = float(self.left.eval(env))
+        right = float(self.right.eval(env))
+        return left - right
+    
+class Multiply(Numeric):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval(self, env):
+        left = float(self.left.eval(env))
+        right = float(self.right.eval(env))
+        return left * right
+    
+class Divide(Numeric):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval(self, env):
+        left = float(self.left.eval(env))
+        right = float(self.right.eval(env))
+        if right == 0:
+            raise Exception("Cannon divide by zero")
+        return left / right
+
+class Mod(Numeric):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval(self, env):
+        left = int(self.left.eval(env))
+        right = int(self.right.eval(env))
+        if right == 0:
+            raise Exception("Cannon mod by zero")
+        return left % right
