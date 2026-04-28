@@ -1,0 +1,5 @@
+var x
+
+x := 10
+print(((x + 1) * (x - 1)))
+print(x * x - 1)

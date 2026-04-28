@@ -1,5 +1,6 @@
 from Lexer import *
-from Translator import * 
+from Translator import *
+from SymbolTable import *
 
 class Parser:
 	lex = None
@@ -289,8 +290,9 @@ class Parser:
 			if self.token.tag == Tag.PRINT:
 				self.check(Tag.PRINT)
 				self.check(ord('('))
-				self.expression()
+				expr = self.expression()
 				self.check(ord(')'))
+				return Print(expr)
 		else:
 			self.error("expected a text statement before " + str(self.token))
 
@@ -298,9 +300,12 @@ class Parser:
 	def assigmentStatement(self):
 		if self.token.tag in self.firstAssigmentStatement:
 			if self.token.tag == Tag.ID:
+				name = self.token.value
+				line = self.lex.line
 				self.check(Tag.ID)
 				self.check(Tag.ASSIGN)
-				self.expression()
+				expr = self.expression()
+				return Assignment(name, expr, line)
 		else:
 			self.error("expected a assigment statement before " + str(self.token))
 	
@@ -308,47 +313,67 @@ class Parser:
 	def statement(self):
 		if self.token.tag in self.firstStatement:
 			if self.token.tag in self.firstAssigmentStatement:
-				self.assigmentStatement()
+				return self.assigmentStatement()
 			elif self.token.tag in self.firstTextStatement:
-				self.textStatement()
+				return self.textStatement()
 		else: 
 			self.error("expected a statement before " + str(self.token))
 	
 	#<statement-sequence> ::= <statement> <statement-sequence>
 	#<statement-sequence> ::= ' '
 	def statementSequence(self):
+		statements = []
 		if self.token.tag in self.firstStatementSequence:
-			self.statement()
-			self.statementSequence()
-		else:
-			pass
+			node = self.statement()
+			statements.append(node)
+			rest = self.statementSequence()
+			statements.extend(rest)
+		return statements
 	
 	#<identifier-list> ::= ',' <identifier> <identifier-list>
 	#<identifier-list> ::= ' '
-	def identifierList(self):
+	def identifierList(self, declarations):
 		if self.token.tag in self.firstIdentifierList:
-			if self.token.tag == ord(','):
-				self.check(ord(','))
-				self.check(Tag.ID)
-				self.identifierList()
+			self.check(ord(','))
+			name = self.token.value
+			line = self.lex.line
+			self.check(Tag.ID)
+			declarations.append(Declaration(name, line))
+			self.identifierList(declarations)
 		else:
 			pass
 	
 	#<declaration-sequence> ::= VAR <identifier> <identifier-list>
 	def declarationSequence(self):
 		if self.token.tag in self.firstDeclarationSequence:
-			if self.token.tag == Tag.VAR:
-				self.check(Tag.VAR)
-				self.check(Tag.ID)
-				self.identifierList()
+			declarations = []
+			self.check(Tag.VAR)
+			name = self.token.value
+			line = self.lex.line
+			self.check(Tag.ID)
+			declarations.append(Declaration(name, line))
+			self.identifierList(declarations)
+			return declarations
 		else: 
 			self.error("expected a declaration sequence before " + str(self.token))
 
 	#<program> ::= <declaration-sequence> <statement-sequence>
 	def program(self):
 		if self.token.tag in self.firstProgram:
-			self.declarationSequence()
-			self.statementSequence()
+			declarations = self.declarationSequence()
+			statements = self.statementSequence()
+			return (declarations, statements)
 		else: 
 			self.error("expected a program before " + str(self.token))
-		
+
+	def analize(self):
+		self.token = self.lex.scan()
+		(declarations, statements) = self.program()
+		if self.token.tag == Tag.EOF:
+			print("Declarations:", [d.name for d in declarations])
+			env = SymbolTable()
+			for decl in declarations:
+				decl.eval(env)
+			for stmt in statements:
+				stmt.eval(env)
+			print("ACCEPTED")
